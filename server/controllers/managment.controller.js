@@ -47,37 +47,35 @@ export const getAdmins = async (req, res) => {
 //   }
 // };
 
-
 export const getUserPerformance = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("ID:",id);
-    // const user=await User.findById(id);
-    // console.log("User:",user);
+    console.log("ID:", id);
     const userWithStats = await User.aggregate([
-      { $match: { _id: new mongoose.Types.ObjectId(id) } },
+      { $match: {_id: new mongoose.Types.ObjectId(id) } },
       {
         $lookup: {
-          from: "affiliatestats",
-          localField: "_id",
-          foreignField: "userId",
-          as: "affiliateStats",
+          from:"affiliatestats",
+          localField:"_id",
+          foreignField:"userId",
+          as:"affiliatestats",
         },
-      },
-      // { $unwind: "$affiliateStats" },
-    ]);
-    console.log("user:",userWithStats[0]);
-    const affiliateStats=userWithStats[0].affiliateStats;
+      },  
+    ],);
+    
+    console.log("user:", userWithStats[0]);
+
+    const affiliatestats = userWithStats[0].affiliateStats;
     const saleTransactions = await Promise.all(
-      affiliateStats[0].affiliateSales.map((id) => {
+      affiliatestats[0].affiliateSales.map((id) => {
         return Transaction.findById(id);
       })
     );
-    console.log("saleTransactions:",saleTransactions)
+    console.log("saleTransactions:", saleTransactions);
     const filteredSaleTransactions = saleTransactions.filter(
       (transaction) => transaction !== null
     );
-      console.log("filter",saleTransactions)
+    console.log("filter", saleTransactions);
     res
       .status(200)
       .json({ user: userWithStats[0], sales: filteredSaleTransactions });
